@@ -20,7 +20,6 @@ train_sol = training_data[1]
 test = test_data[0].T
 
 
-
 ########PLAY WITH TOYS#######
 #choosing different step size, batch size, and layer structure has widely varying results
 #as well as effects of random weight initialization, some hands are better than others
@@ -28,8 +27,8 @@ test = test_data[0].T
 #MAKE SURE for now that 5000 is evenly divisible by chosen batch size
 network = Neural_Network([784, 200, 100, 10], 10)
 #if loading a file, make sure you initialize the network to have same layers
-#network.load_weights('98.4_save_784_300_200_100_10_step_10.0_batch_10_weights.pkl', '98.4_save_784_300_200_100_10_step_10.0_batch_10_biases.pkl')
-#network.load_weights('98.47save_784_300_200_100_10_from98.13_weights.pkl', '98.47save_784_300_200_100_10_from98.13_biases.pkl')
+#network.load_weights('p98.4_save_784_300_200_100_10_weights.pkl', 'p98.4_save_784_300_200_100_10_biases.pkl')
+#network.load_weights('p98.47_save_784_300_200_100_10_weights.pkl', 'p98.47_save_784_300_200_100_10_biases.pkl')
 
 #how many times to cycle through the full training set
 cycles = 1
