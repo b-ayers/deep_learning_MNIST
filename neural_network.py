@@ -9,19 +9,16 @@ class Neural_Network:
     #input list with number of nodes per layer, nlayer
     def __init__(self, nlayer, batchsize):
         self.L = len(nlayer)
-        self.weights = []
-        self.bias = []
         self.layers = nlayer
         self.batch = batchsize
-        
+
+        self.weights = []
+        self.bias = []
         #for each layer after input layer generate weight matrix and bias
         for i in range(1,self.L):
             #each weight matrix should have dimension n_i x n_(i-1)
             self.weights.append(np.random.triangular(-0.5,0,0.5,(nlayer[i],nlayer[i-1])))
-            #generates (n_i x batchsize) matrix of a repeated randomized column vector
-            #because feeding entire batch through at once, may be easier to just add the
-            #bias as a matrix rather than adding the same column vector to each column in z
-            #self.bias.append(np.full((batchsize,nlayer[i]), np.random.rand(1,nlayer[i])).T)
+            #store bias as column vector for each layer, tile it later
             self.bias.append(np.random.triangular(-0.5,0,0.5,(nlayer[i],1)))
 
 
@@ -29,6 +26,7 @@ class Neural_Network:
     #send in batch as a n_0 by N matrix input and n_L by N solution matrix
     #performs training cycle on single batch
     def epoch(self, batch_in, batch_sol, step):
+        #set 784*N training set matrix as first layer node values
         a = [batch_in]
         z = []
         #calculate z and the sigmoid of z for each layer
@@ -39,21 +37,23 @@ class Neural_Network:
             a.append(sigmoid(z[i]))
         
         #list of dl, errors, starting with layer L, will add others to front
+        #this is (dC/da_L)(da_L/dz_L)
         dl = [(a[-1]-batch_sol) * sigmoidprime(z[-1])]
         
         #range of final z index to z[1], stepping backwards
         for i in range(len(z)-1, 0, -1):
             #stepping backwards, push d_l = (w_(l+1))^T*d_(l+1) product f'(z_l)
+            #basically, build the chain rule up step by step
             dl.insert(0, np.dot(self.weights[i].T, dl[0])*sigmoidprime(z[i-1]))
 
-        #using list of dl, for each layercalculate weight gradient matrix and basis gradient vector
+        #using list of dl, for each layer calculate weight gradient matrix and basis gradient vector
 
-        #for weight gradient matrices, dC_x/dw_jk^l = d_(l,x) * (a_(l-1,x))^T
-        #where x indicates the xth column of d_l and a_(l-1)
-        #the matrix product of these column/transposed row pairs is the weight gradient matrix
-        #contribution from the xth training sample
-        #adding them up and taking the average, gives total weight grad
-        #repeat for each layer
+        ##for weight gradient matrices, dC_x/dw_jk^l = d_(l,x) * (a_(l-1,x))^T
+        ##where x indicates the xth column of d_l and a_(l-1)
+        ##the matrix product of these column/transposed row pairs is the
+        ##weight gradient matrix contribution from the xth training sample
+        ##adding them up and taking the average, gives total weight grad
+        ##repeat for each layer
         
         dwl = []
         for i in range(0,len(dl)-1):
@@ -102,6 +102,8 @@ class Neural_Network:
         print(correct, ' out of ', size, 'evaluated correctly: ', (correct/size)*100, '%')
         return (correct/size)*100
 
+
+
     def save_weights(self, percent):
         
         fn = 'saves\p' + str(percent) + 'save_'
@@ -115,6 +117,7 @@ class Neural_Network:
         fnb = fn + 'biases.pkl'
         with open(fnb, 'wb') as outfile:
             cPickle.dump(self.bias, outfile)
+
 
 
     def load_weights(self, weight_filename, bias_filename):
