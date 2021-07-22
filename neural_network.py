@@ -5,7 +5,6 @@ import _pickle as cPickle
 
 #for stochastic deep learning
 #processes an entire batch at once as a matrix of batchsize columns
-#rather than running each input through individually
 class NeuralNet:
     #input list with number of nodes per layer, nlayer
     def __init__(self, nlayer, batchsize):
@@ -24,8 +23,11 @@ class NeuralNet:
             #bias as a matrix rather than adding the same column vector to each column in z
             #self.bias.append(np.full((batchsize,nlayer[i]), np.random.rand(1,nlayer[i])).T)
             self.bias.append(np.random.triangular(-0.5,0,0.5,(nlayer[i],1)))
+
+
                                             
     #send in batch as a n_0 by N matrix input and n_L by N solution matrix
+    #performs training cycle on single batch
     def epoch(self, batch_in, batch_sol, step):
         a = [batch_in]
         z = []
@@ -50,7 +52,7 @@ class NeuralNet:
         #where x indicates the xth column of d_l and a_(l-1)
         #the matrix product of these column/transposed row pairs is the weight gradient matrix
         #contribution from the xth training sample
-        #adding them up and taking the average, (then normalizing(?)) gives total weight grad
+        #adding them up and taking the average, gives total weight grad
         #repeat for each layer
         
         dwl = []
@@ -91,33 +93,34 @@ class NeuralNet:
         a = [batch_in]
         for i in range(0,self.L-1):
             a.append(sigmoid(np.dot(self.weights[i],a[i])+np.tile(self.bias[i], size)))
-            
         #find index of max value in each output vector (column of a_L matrix)     
         output = np.argmax(a[-1], 0)
-
         correct = 0
         for x, y in zip(output, batch_sol):
             if x == y:
                 correct += 1
         print(correct, ' out of ', size, 'evaluated correctly: ', (correct/size)*100, '%')
 
+
     def save_weights(self, step):
         fn = 'save_'
         for i in self.layers:
             fn = fn + str(i) + '_'
-        fn += ('step_' + str(step) + '_batch_' + str(self.batch))
+
         fnw = fn + '_weights'
         with open(fnw, 'wb') as outfile:
             cPickle.dump(self.weights, outfile)
+
         fnb = fn + '_biases'
         with open(fnb, 'wb') as outfile:
             cPickle.dump(self.bias, outfile)
 
+
     def load_weights(self, weight_filename, bias_filename):
         with open(weight_filename, 'rb') as infile:
-            self.weights = pickle.load(infile)
+            self.weights = cPickle.load(infile)
         with open(bias_filename, 'rb') as infile:
-            self.bias = pickle.load(infile)
+            self.bias = cPickle.load(infile)
 
 
 #compute the sigmoid function of each entry in matrix z and return as a matrix    
@@ -137,7 +140,7 @@ def vectorize_solutions(arr):
     return temp
 
 
-
+#######LOAD IN DATA########
 
 #code to read in MINST data and format into batch size matrices
 #data pulled from Neilson's file, going to reformat it myself
@@ -157,11 +160,16 @@ test = test_data[0].T
 train_sol = training_data[1]
 
 
+########PLAY WITH TOYS#######
+
+
 #choosing different step size, batch size, and layer structure has widely varying results
 #as well as effects of random weight initialization, some hands are better than others
 #need to learn more about optimizing these parameters
 #MAKE SURE for now that 5000 is evenly divisible by chosen batch size
-network = NeuralNet([784, 200, 100, 50, 10], 10)
+network = NeuralNet([784, 300, 200, 100, 10], 10)
+#network.load_weights('98.4_save_784_300_200_100_10_step_10.0_batch_10_weights.pkl', '98.4_save_784_300_200_100_10_step_10.0_batch_10_biases.pkl')
+#network.load_weights('98.47save_784_300_200_100_10_from98.13_weights.pkl', '98.47save_784_300_200_100_10_from98.13_biases.pkl')
 
 #how many times to cycle through the full training set
 cycles = 40
@@ -169,28 +177,38 @@ cycles = 40
 st = 10.0
 testsize = 10000
 
-for c in range(0, cycles):
-    #make sure for now that 50000 (training set size) is EVENLY DIVISIBLE by chosen batch size,
-    #this will generate a random permutation of batch size separated starting points
-    r = np.random.permutation(range(0, 50000, network.batch))
 
+for c in range(0, cycles):
+    #to shuffle both the solutions and inputs in the same order
+    #questionable efficiency
+    permute = np.random.permutation(50000)
+    train = train[:, permute]
+    train_sol = train_sol[permute]
+    #was previously only using
+    #r = np.random.permutation(range(0, 50000, network.batch))
+    #but realized I was taking the same slices, only in different orders
+
+    #starting points separated by batchsize
+    r = range(0, 50000, network.batch)
     for k in r:
+        #take batchsize slice of training data as matrix and perform training cycle on it
+        #solutions have to be vectorized before stacking into matrix
         batch_input = train[:,k:k+network.batch]
         batch_solutions = vectorize_solutions(train_sol[k:k+network.batch])
         network.epoch(batch_input, batch_solutions, st)
-        
-
+    #after running through full training set, test on test data to see how network is progressing
     test_input = test[:,0:testsize]
     test_solutions = test_data[1][0:testsize]
-
     network.test_network(test_input, test_solutions, testsize)
+
+######SAVE IF IT DID WELL##########
 
 print('Press "s" to save weights and biases, or any key to quit')
 num = input("Enter: ")
 if num == 's':
     network.save_weights(st)
     
-        
+
     
     
 
