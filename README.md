@@ -1,5 +1,15 @@
 # deep_learning_MNIST
 
+*Note from future: this was my first step into machine learning. It is a first principles
+implementation of multi-layer FC neural networks with stochastic gradient descent. 
+It was intended for educational purposes only: for understanding the nuts and bolts
+of how NNs produce results that otherwise look like magic. Any serious application of
+neural networks should use a framework like torch or keras, which have been optimized
+for performance and modularity. (The 98.5% accuracy I achieved here in a few days of work
+took only a few hours of pytorch time (including learning the basic library).) In this 
+readme I attempted to explain my understanding in relatively simple terms for anyone 
+who does't have a strong calculus foundation.*
+
 This is my implementation of a neural network with stochastic gradient descent,
 using principles learned in Michael Nielsen's book found at the link:
 http://neuralnetworksanddeeplearning.com/chap1.html
