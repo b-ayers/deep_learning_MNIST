@@ -24,7 +24,7 @@ test = test_data[0].T
 #choosing different step size, batch size, and layer structure has widely varying results
 #as well as effects of random weight initialization, some hands are better than others
 #need to learn more about optimizing these parameters
-#MAKE SURE for now that 5000 is evenly divisible by chosen batch size
+#MAKE SURE for now that 50000 is evenly divisible by chosen batch size
 network = Neural_Network([784, 200, 100, 10], 10)
 #if loading a file, make sure you initialize the network to have same layers
 #network.load_weights('p98.4_save_784_300_200_100_10_weights.pkl', 'p98.4_save_784_300_200_100_10_biases.pkl')
